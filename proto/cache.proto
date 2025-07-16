@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package cache;
+
+message CacheEntry {
+  string key = 1;
+  bytes data = 2;  // 1KB of data
+  int64 timestamp = 3;
+  map<string, string> metadata = 4;
+}
+
+message CacheRequest {
+  string key = 1;
+  CacheEntry entry = 2;
+}
+
+message CacheResponse {
+  bool found = 1;
+  CacheEntry entry = 2;
+  int64 lookup_time_ns = 3;
+} 
