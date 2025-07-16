@@ -2,6 +2,20 @@
 
 set -e
 
+# Detect OS for library path and extensions
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS
+    LIBRARY_PATH_VAR="DYLD_LIBRARY_PATH"
+    LIBRARY_EXT="dylib"
+elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    # Linux (Ubuntu)
+    LIBRARY_PATH_VAR="LD_LIBRARY_PATH"
+    LIBRARY_EXT="so"
+else
+    echo "Unsupported OS: $OSTYPE"
+    exit 1
+fi
+
 echo "Building C++ Cache Library..."
 cd cpp
 mkdir -p build
@@ -31,15 +45,15 @@ cd ..
 
 echo "Running Go Benchmark..."
 cd go
-# Set DYLD_LIBRARY_PATH for macOS dynamic library loading
-export DYLD_LIBRARY_PATH=../cpp/build/lib:$DYLD_LIBRARY_PATH
+# Set library path for dynamic library loading
+export $LIBRARY_PATH_VAR=../cpp/build/lib:${!LIBRARY_PATH_VAR}
 ./cache_benchmark
 cd ..
 
 echo "Running Java Benchmark..."
 cd java
-# Set java.library.path for JNI library loading
-export DYLD_LIBRARY_PATH=../cpp/build/lib:$DYLD_LIBRARY_PATH
+# Set library path for JNI library loading
+export $LIBRARY_PATH_VAR=../cpp/build/lib:${!LIBRARY_PATH_VAR}
 java -Djava.library.path=build/lib -cp target/classes Main
 cd ..
 
