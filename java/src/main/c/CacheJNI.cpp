@@ -1,6 +1,6 @@
 #include <jni.h>
 #include <string>
-#include "cache.h"
+#include "cache_c.h"
 
 extern "C" {
 

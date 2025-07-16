@@ -1,0 +1,121 @@
+# Build artifacts
+build/
+cpp/build/
+java/build/
+go/cache_benchmark
+
+# C++ build artifacts
+*.o
+*.so
+*.dylib
+*.dll
+*.a
+*.exe
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# Go build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.sum
+
+# Java build artifacts
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.pid
+*.seed
+*.pid.lock
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Node.js (if any)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python (if any)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Maven
+.mvn/
+mvnw
+mvnw.cmd
+
+# Gradle (if any)
+.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
+!gradle-wrapper.properties
+
+# Protobuf generated files (if re-enabled)
+*.pb.cc
+*.pb.h
+*.pb.go
+*.pb.java
+
+# Coverage reports
+coverage/
+*.cover
+*.out
+
+# Profiling data
+*.prof
+*.pprof
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Local configuration files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Package manager lock files (keep go.mod but ignore others if needed)
+# package-lock.json
+# yarn.lock 

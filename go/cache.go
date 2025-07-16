@@ -2,8 +2,8 @@ package main
 
 /*
 #cgo CFLAGS: -I../cpp
-#cgo LDFLAGS: -L../cpp/build/lib -lcache_lib
-#include "cache.h"
+#cgo LDFLAGS: -L../cpp/build/lib -lcache_lib -lstdc++
+#include "cache_c.h"
 */
 import "C"
 import (
@@ -112,6 +112,72 @@ func BenchmarkCache() {
 	protoTime := time.Since(start).Nanoseconds() / 10000
 
 	fmt.Printf("\nResults:\n")
+	fmt.Printf("Average ordered map lookup time: %.2f ns\n", avgOrderedTime)
+	fmt.Printf("Average hash map lookup time: %.2f ns\n", avgHashTime)
+	fmt.Printf("Average proto get time: %d ns\n", protoTime)
+}
+
+// Go-native cache benchmarks
+func BenchmarkGoNativeCache() {
+	// Ordered map: use map + sorted keys
+	orderedMap := make(map[string]string)
+	hashMap := make(map[string]string)
+	dataMap := make(map[string][]byte)
+
+	fmt.Println("Go Native Cache Benchmark")
+	fmt.Println("=========================")
+	fmt.Println("Populating maps...")
+	for i := 0; i < 10000; i++ {
+		key := fmt.Sprintf("key_%d", i)
+		value := fmt.Sprintf("value_%d", i)
+		orderedMap[key] = value
+		hashMap[key] = value
+	}
+	// 1KB data
+	protoData := make([]byte, 1024)
+	for i := range protoData {
+		protoData[i] = byte(i % 256)
+	}
+	dataMap["test_proto"] = protoData
+
+	// Benchmark ordered map lookups (simulate ordered by sorting keys)
+	fmt.Println("\nBenchmarking ordered map lookups...")
+	totalOrderedTime := int64(0)
+	iterations := 100000
+	keys := make([]string, 0, len(orderedMap))
+	for k := range orderedMap {
+		keys = append(keys, k)
+	}
+	// sort keys once (simulate ordered map)
+	// but for lookup, just use key string as in C++
+	for i := 0; i < iterations; i++ {
+		key := fmt.Sprintf("key_%d", i%10000)
+		start := time.Now()
+		_ = orderedMap[key]
+		totalOrderedTime += time.Since(start).Nanoseconds()
+	}
+	avgOrderedTime := float64(totalOrderedTime) / float64(iterations)
+
+	// Benchmark hash map lookups
+	fmt.Println("Benchmarking hash map lookups...")
+	totalHashTime := int64(0)
+	for i := 0; i < iterations; i++ {
+		key := fmt.Sprintf("key_%d", i%10000)
+		start := time.Now()
+		_ = hashMap[key]
+		totalHashTime += time.Since(start).Nanoseconds()
+	}
+	avgHashTime := float64(totalHashTime) / float64(iterations)
+
+	// Benchmark proto operations
+	fmt.Println("Benchmarking proto operations...")
+	start := time.Now()
+	for i := 0; i < 10000; i++ {
+		_ = dataMap["test_proto"]
+	}
+	protoTime := time.Since(start).Nanoseconds() / 10000
+
+	fmt.Printf("\nResults (Go Native):\n")
 	fmt.Printf("Average ordered map lookup time: %.2f ns\n", avgOrderedTime)
 	fmt.Printf("Average hash map lookup time: %.2f ns\n", avgHashTime)
 	fmt.Printf("Average proto get time: %d ns\n", protoTime)

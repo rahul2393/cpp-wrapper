@@ -31,14 +31,16 @@ cd ..
 
 echo "Running Go Benchmark..."
 cd go
-export LD_LIBRARY_PATH=../cpp/build/lib:$LD_LIBRARY_PATH
+# Set DYLD_LIBRARY_PATH for macOS dynamic library loading
+export DYLD_LIBRARY_PATH=../cpp/build/lib:$DYLD_LIBRARY_PATH
 ./cache_benchmark
 cd ..
 
 echo "Running Java Benchmark..."
 cd java
-export LD_LIBRARY_PATH=build/lib:$LD_LIBRARY_PATH
-java -cp target/classes Main
+# Set java.library.path for JNI library loading
+export DYLD_LIBRARY_PATH=../cpp/build/lib:$DYLD_LIBRARY_PATH
+java -Djava.library.path=build/lib -cp target/classes Main
 cd ..
 
 echo "Benchmark completed!" 

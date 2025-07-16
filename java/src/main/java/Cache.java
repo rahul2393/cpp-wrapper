@@ -1,6 +1,6 @@
 public class Cache {
     static {
-        System.loadLibrary("cache_lib");
+        System.loadLibrary("cache_jni");
     }
 
     private long handle;

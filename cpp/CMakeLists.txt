@@ -4,27 +4,15 @@ project(cache_lib)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Find Protobuf
-find_package(Protobuf REQUIRED)
-
-# Generate protobuf files
-protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS proto/cache.proto)
-
 # Create shared library
 add_library(cache_lib SHARED
     cache.cpp
-    ${PROTO_SRCS}
 )
 
 # Include directories
 target_include_directories(cache_lib PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${Protobuf_INCLUDE_DIRS}
-)
-
-# Link libraries
-target_link_libraries(cache_lib
-    ${Protobuf_LIBRARIES}
+    ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 # Set output directory

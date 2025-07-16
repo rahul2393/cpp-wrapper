@@ -1,11 +1,9 @@
-#pragma once
+#ifndef CACHE_C_H
+#define CACHE_C_H
 
-#include <map>
-#include <unordered_map>
-#include <string>
-#include <chrono>
-
+#ifdef __cplusplus
 extern "C" {
+#endif
 
 // C-style interface for Go and Java
 typedef void* CacheHandle;
@@ -30,4 +28,8 @@ const char* cache_lookup_hash(CacheHandle handle, const char* key);
 long long cache_get_ordered_lookup_time_ns(CacheHandle handle);
 long long cache_get_hash_lookup_time_ns(CacheHandle handle);
 
-} 
+#ifdef __cplusplus
+}
+#endif
+
+#endif // CACHE_C_H 
