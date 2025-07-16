@@ -15,6 +15,14 @@ target_include_directories(cache_lib PUBLIC
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 
+# Use static linking for C++ standard library on Linux
+if(NOT APPLE)
+    target_link_libraries(cache_lib
+        -static-libstdc++
+        -static-libgcc
+    )
+endif()
+
 # Set output directory
 set_target_properties(cache_lib PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib

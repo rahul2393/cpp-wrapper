@@ -53,7 +53,12 @@ cd ..
 echo "Running Java Benchmark..."
 cd java
 # Set library path for JNI library loading
-export $LIBRARY_PATH_VAR=../cpp/build/lib:${!LIBRARY_PATH_VAR}
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    # On Linux, include system library paths for libstdc++
+    export $LIBRARY_PATH_VAR=../cpp/build/lib:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:${!LIBRARY_PATH_VAR}
+else
+    export $LIBRARY_PATH_VAR=../cpp/build/lib:${!LIBRARY_PATH_VAR}
+fi
 java -Djava.library.path=build/lib -cp target/classes Main
 cd ..
 
