@@ -54,14 +54,6 @@ func (c *Cache) LookupHash(key string) string {
 	return C.GoString(result)
 }
 
-func (c *Cache) GetOrderedLookupTimeNs() int64 {
-	return int64(C.cache_get_ordered_lookup_time_ns(c.handle))
-}
-
-func (c *Cache) GetHashLookupTimeNs() int64 {
-	return int64(C.cache_get_hash_lookup_time_ns(c.handle))
-}
-
 func BenchmarkCache() {
 	cache := NewCache()
 	defer cache.Destroy()
@@ -83,13 +75,15 @@ func BenchmarkCache() {
 	cache.SetProto("test_proto", protoData)
 
 	// Benchmark ordered map lookups
-	fmt.Println("\nBenchmarking ordered map lookups...")
+	fmt.Println("Benchmarking ordered map lookups...")
 	var totalOrderedTime int64
 	iterations := 100000
 	for i := 0; i < iterations; i++ {
 		key := fmt.Sprintf("key_%d", i%10000)
-		cache.LookupOrdered(key)
-		totalOrderedTime += cache.GetOrderedLookupTimeNs()
+		start := time.Now()
+		result := cache.LookupOrdered(key)
+		totalOrderedTime += time.Since(start).Nanoseconds()
+		_ = result
 	}
 	avgOrderedTime := float64(totalOrderedTime) / float64(iterations)
 
@@ -98,8 +92,10 @@ func BenchmarkCache() {
 	var totalHashTime int64
 	for i := 0; i < iterations; i++ {
 		key := fmt.Sprintf("key_%d", i%10000)
-		cache.LookupHash(key)
-		totalHashTime += cache.GetHashLookupTimeNs()
+		start := time.Now()
+		result := cache.LookupHash(key)
+		totalHashTime += time.Since(start).Nanoseconds()
+		_ = result
 	}
 	avgHashTime := float64(totalHashTime) / float64(iterations)
 
@@ -133,6 +129,7 @@ func BenchmarkGoNativeCache() {
 		orderedMap[key] = value
 		hashMap[key] = value
 	}
+
 	// 1KB data
 	protoData := make([]byte, 1024)
 	for i := range protoData {
@@ -140,16 +137,10 @@ func BenchmarkGoNativeCache() {
 	}
 	dataMap["test_proto"] = protoData
 
-	// Benchmark ordered map lookups (simulate ordered by sorting keys)
-	fmt.Println("\nBenchmarking ordered map lookups...")
+	// Benchmark ordered map lookups
+	fmt.Println("Benchmarking ordered map lookups...")
 	totalOrderedTime := int64(0)
 	iterations := 100000
-	keys := make([]string, 0, len(orderedMap))
-	for k := range orderedMap {
-		keys = append(keys, k)
-	}
-	// sort keys once (simulate ordered map)
-	// but for lookup, just use key string as in C++
 	for i := 0; i < iterations; i++ {
 		key := fmt.Sprintf("key_%d", i%10000)
 		start := time.Now()

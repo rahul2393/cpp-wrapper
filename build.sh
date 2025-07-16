@@ -59,6 +59,7 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
 else
     export $LIBRARY_PATH_VAR=../cpp/build/lib:${!LIBRARY_PATH_VAR}
 fi
+# Run Java benchmark
 java -Djava.library.path=build/lib -cp target/classes Main
 cd ..
 
