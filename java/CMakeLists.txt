@@ -26,11 +26,21 @@ else()
     set(CACHE_LIB_EXT "so")
 endif()
 
-# Link libraries
-target_link_libraries(cache_jni
-    ${JNI_LIBRARIES}
-    ${CMAKE_CURRENT_SOURCE_DIR}/../cpp/build/lib/libcache_lib.${CACHE_LIB_EXT}
-)
+# Link libraries with static C++ standard library to avoid GLIBC issues
+if(APPLE)
+    target_link_libraries(cache_jni
+        ${JNI_LIBRARIES}
+        ${CMAKE_CURRENT_SOURCE_DIR}/../cpp/build/lib/libcache_lib.${CACHE_LIB_EXT}
+    )
+else()
+    # On Linux, use static linking for C++ standard library
+    target_link_libraries(cache_jni
+        ${JNI_LIBRARIES}
+        ${CMAKE_CURRENT_SOURCE_DIR}/../cpp/build/lib/libcache_lib.${CACHE_LIB_EXT}
+        -static-libstdc++
+        -static-libgcc
+    )
+endif()
 
 # Set output directory
 set_target_properties(cache_jni PROPERTIES
