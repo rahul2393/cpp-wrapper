@@ -1,3 +1,5 @@
+import java.util.Arrays;
+
 public class Main {
     public static void main(String[] args) {
         System.out.println("Java Cache Benchmark (JNI backend)");
@@ -5,6 +7,49 @@ public class Main {
         benchmarkCache();
         System.out.println("\n------------------------------\n");
         benchmarkJavaNativeCache();
+    }
+
+    // Calculate percentile from sorted array
+    private static long calculatePercentile(long[] times, int percentile) {
+        if (times.length == 0) {
+            return 0;
+        }
+        int index = (percentile * times.length) / 100;
+        if (index >= times.length) {
+            index = times.length - 1;
+        }
+        return times[index];
+    }
+
+    // Print timing statistics including percentiles
+    private static void printTimingStats(String operation, long[] times) {
+        if (times.length == 0) {
+            return;
+        }
+        
+        // Sort times for percentile calculation
+        long[] sortedTimes = Arrays.copyOf(times, times.length);
+        Arrays.sort(sortedTimes);
+        
+        // Calculate average
+        long total = 0;
+        for (long time : times) {
+            total += time;
+        }
+        double avg = (double) total / times.length;
+        
+        // Calculate percentiles
+        long p50 = calculatePercentile(sortedTimes, 50);
+        long p90 = calculatePercentile(sortedTimes, 90);
+        long p95 = calculatePercentile(sortedTimes, 95);
+        long p99 = calculatePercentile(sortedTimes, 99);
+        
+        System.out.printf("%s:\n", operation);
+        System.out.printf("  Average: %.2f ns\n", avg);
+        System.out.printf("  P50: %d ns\n", p50);
+        System.out.printf("  P90: %d ns\n", p90);
+        System.out.printf("  P95: %d ns\n", p95);
+        System.out.printf("  P99: %d ns\n", p99);
     }
 
     public static void benchmarkCache() {
@@ -29,46 +74,44 @@ public class Main {
 
             // Benchmark ordered map lookups
             System.out.println("Benchmarking ordered map lookups...");
-            long totalOrderedTime = 0;
+            long[] orderedTimes = new long[100000];
             int iterations = 100000;
             for (int i = 0; i < iterations; i++) {
                 String key = "key_" + (i % 10000);
                 long start = System.nanoTime();
                 String result = cache.lookupOrdered(key);
-                totalOrderedTime += (System.nanoTime() - start);
+                orderedTimes[i] = System.nanoTime() - start;
                 if (result == null) {
                     System.out.println("Unexpected null result");
                 }
             }
-            double avgOrderedTime = (double) totalOrderedTime / iterations;
 
             // Benchmark hash map lookups
             System.out.println("Benchmarking hash map lookups...");
-            long totalHashTime = 0;
+            long[] hashTimes = new long[100000];
             for (int i = 0; i < iterations; i++) {
                 String key = "key_" + (i % 10000);
                 long start = System.nanoTime();
                 String result = cache.lookupHash(key);
-                totalHashTime += (System.nanoTime() - start);
+                hashTimes[i] = System.nanoTime() - start;
                 if (result == null) {
                     System.out.println("Unexpected null result");
                 }
             }
-            double avgHashTime = (double) totalHashTime / iterations;
 
             // Benchmark proto operations
             System.out.println("Benchmarking proto operations...");
-            long startTime = System.nanoTime();
+            long[] protoTimes = new long[10000];
             for (int i = 0; i < 10000; i++) {
+                long start = System.nanoTime();
                 cache.getProto("test_proto");
+                protoTimes[i] = System.nanoTime() - start;
             }
-            long endTime = System.nanoTime();
-            long protoTime = (endTime - startTime) / 10000;
 
             System.out.printf("\nResults:\n");
-            System.out.printf("Average ordered map lookup time: %.2f ns\n", avgOrderedTime);
-            System.out.printf("Average hash map lookup time: %.2f ns\n", avgHashTime);
-            System.out.printf("Average proto get time: %d ns\n", protoTime);
+            printTimingStats("Ordered map lookup", orderedTimes);
+            printTimingStats("Hash map lookup", hashTimes);
+            printTimingStats("Proto get", protoTimes);
 
         } finally {
             cache.destroy();
@@ -100,39 +143,37 @@ public class Main {
 
         // Benchmark ordered map lookups
         System.out.println("Benchmarking ordered map lookups...");
-        long totalOrderedTime = 0;
+        long[] orderedTimes = new long[100000];
         int iterations = 100000;
         for (int i = 0; i < iterations; i++) {
             String key = "key_" + (i % 10000);
             long start = System.nanoTime();
             orderedMap.get(key);
-            totalOrderedTime += (System.nanoTime() - start);
+            orderedTimes[i] = System.nanoTime() - start;
         }
-        double avgOrderedTime = (double) totalOrderedTime / iterations;
 
         // Benchmark hash map lookups
         System.out.println("Benchmarking hash map lookups...");
-        long totalHashTime = 0;
+        long[] hashTimes = new long[100000];
         for (int i = 0; i < iterations; i++) {
             String key = "key_" + (i % 10000);
             long start = System.nanoTime();
             hashMap.get(key);
-            totalHashTime += (System.nanoTime() - start);
+            hashTimes[i] = System.nanoTime() - start;
         }
-        double avgHashTime = (double) totalHashTime / iterations;
 
         // Benchmark proto operations
         System.out.println("Benchmarking proto operations...");
-        long start = System.nanoTime();
+        long[] protoTimes = new long[10000];
         for (int i = 0; i < 10000; i++) {
+            long start = System.nanoTime();
             dataMap.get("test_proto");
+            protoTimes[i] = System.nanoTime() - start;
         }
-        long end = System.nanoTime();
-        long protoTime = (end - start) / 10000;
 
         System.out.printf("\nResults (Java Native):\n");
-        System.out.printf("Average ordered map lookup time: %.2f ns\n", avgOrderedTime);
-        System.out.printf("Average hash map lookup time: %.2f ns\n", avgHashTime);
-        System.out.printf("Average proto get time: %d ns\n", protoTime);
+        printTimingStats("Ordered map lookup", orderedTimes);
+        printTimingStats("Hash map lookup", hashTimes);
+        printTimingStats("Proto get", protoTimes);
     }
 } 

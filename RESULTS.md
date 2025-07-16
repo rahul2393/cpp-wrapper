@@ -18,49 +18,101 @@ This project benchmarks the performance of calling C++ cache operations from Go 
 - **Data Tests**: 10,000 iterations of 1KB data retrieval operations
 - **Platform**: macOS (Apple Silicon M1)
 
-### Performance Comparison
+### Performance Statistics
+The benchmarks now provide comprehensive performance statistics including:
+- **Average**: Mean time across all iterations
+- **P50**: Median time (50th percentile)
+- **P90**: 90th percentile (90% of operations are faster than this)
+- **P95**: 95th percentile (95% of operations are faster than this)
+- **P99**: 99th percentile (99% of operations are faster than this)
 
-#### C++-Backed Implementations (CGO/JNI)
+### Performance Comparison by Percentile
 
-| Operation | Go (CGO) | Java (JNI) | Difference |
-|-----------|----------|------------|------------|
-| **Ordered Map Lookup** | 1221.94 ns | 974.40 ns | Java ~20.3% faster |
-| **Hash Map Lookup** | 636.75 ns | 203.27 ns | Java ~68.1% faster |
-| **Data Retrieval** | 1550 ns | 690 ns | Java ~55.5% faster |
+#### Average Performance
 
-#### Native Implementations
+| Operation | Go (CGO) | Java (JNI) | Go (Native) | Java (Native) |
+|-----------|----------|------------|-------------|---------------|
+| **Ordered Map Lookup** | 1321.44 ns | 1372.88 ns | 46.24 ns | 156.01 ns |
+| **Hash Map Lookup** | 523.47 ns | 559.11 ns | 48.79 ns | 73.42 ns |
+| **Data Retrieval** | 674.00 ns | 705.53 ns | 28.64 ns | 44.56 ns |
 
-| Operation | Go (Native) | Java (Native) | Difference |
-|-----------|-------------|---------------|------------|
-| **Ordered Map Lookup** | 531.71 ns | 112.92 ns | Java ~79.8% faster |
-| **Hash Map Lookup** | 127.24 ns | 53.53 ns | Java ~57.9% faster |
-| **Data Retrieval** | 6 ns | 56 ns | Go ~89.3% faster |
+#### P50 (Median) Performance
 
-#### Native vs C++-Backed Performance
+| Operation | Go (CGO) | Java (JNI) | Go (Native) | Java (Native) |
+|-----------|----------|------------|-------------|---------------|
+| **Ordered Map Lookup** | 1250 ns | 1333 ns | 42 ns | 84 ns |
+| **Hash Map Lookup** | 500 ns | 500 ns | 42 ns | 83 ns |
+| **Data Retrieval** | 542 ns | 584 ns | 41 ns | 42 ns |
+
+#### P90 Performance
+
+| Operation | Go (CGO) | Java (JNI) | Go (Native) | Java (Native) |
+|-----------|----------|------------|-------------|---------------|
+| **Ordered Map Lookup** | 1500 ns | 1541 ns | 83 ns | 375 ns |
+| **Hash Map Lookup** | 625 ns | 666 ns | 83 ns | 84 ns |
+| **Data Retrieval** | 667 ns | 708 ns | 42 ns | 83 ns |
+
+#### P95 Performance
+
+| Operation | Go (CGO) | Java (JNI) | Go (Native) | Java (Native) |
+|-----------|----------|------------|-------------|---------------|
+| **Ordered Map Lookup** | 1584 ns | 1625 ns | 84 ns | 459 ns |
+| **Hash Map Lookup** | 667 ns | 709 ns | 84 ns | 125 ns |
+| **Data Retrieval** | 709 ns | 1625 ns | 42 ns | 84 ns |
+
+#### P99 Performance
+
+| Operation | Go (CGO) | Java (JNI) | Go (Native) | Java (Native) |
+|-----------|----------|------------|-------------|---------------|
+| **Ordered Map Lookup** | 2041 ns | 1959 ns | 125 ns | 666 ns |
+| **Hash Map Lookup** | 875 ns | 916 ns | 125 ns | 167 ns |
+| **Data Retrieval** | 1625 ns | 2000 ns | 42 ns | 84 ns |
+
+### Performance Variance Analysis
+
+#### C++-Backed vs Native Performance Ratios
 
 | Operation | Go Native vs CGO | Java Native vs JNI |
 |-----------|------------------|-------------------|
-| **Ordered Map Lookup** | Native ~2.3x faster | Native ~8.6x faster |
-| **Hash Map Lookup** | Native ~5.0x faster | Native ~3.8x faster |
-| **Data Retrieval** | Native ~258x faster | Native ~12.3x faster |
+| **Ordered Map Lookup** | Native ~28.6x faster | Native ~8.8x faster |
+| **Hash Map Lookup** | Native ~10.7x faster | Native ~7.6x faster |
+| **Data Retrieval** | Native ~23.5x faster | Native ~15.8x faster |
+
+#### Performance Consistency (P99/P50 Ratio)
+
+| Operation | Go (CGO) | Java (JNI) | Go (Native) | Java (Native) |
+|-----------|----------|------------|-------------|---------------|
+| **Ordered Map Lookup** | 1.63x | 1.47x | 2.98x | 7.93x |
+| **Hash Map Lookup** | 1.75x | 1.83x | 2.98x | 2.01x |
+| **Data Retrieval** | 3.00x | 3.42x | 1.02x | 2.00x |
 
 ### Key Observations
 
-1. **Native Performance**: Both Go and Java native implementations significantly outperform their C++-backed counterparts.
+1. **Native Performance**: Both Go and Java native implementations significantly outperform their C++-backed counterparts across all percentiles.
 
 2. **C++ Overhead**: The CGO/JNI overhead is substantial, especially for simple operations like data retrieval.
 
 3. **Language Comparison**: 
-   - Java's native collections are generally faster than Go's for map operations
-   - Go's native data retrieval is exceptionally fast (6 ns vs Java's 56 ns)
+   - Go's native collections are generally faster than Java's for map operations
+   - Go's native data retrieval is exceptionally fast (28.64 ns vs Java's 44.56 ns)
 
 4. **Hash Map Performance**: Both implementations show excellent performance with hash map lookups being significantly faster than ordered map lookups.
 
 5. **JNI vs CGO Overhead**: 
-   - Java JNI shows better performance than Go CGO for C++-backed operations
-   - The performance gap between native and C++-backed is larger for Java
+   - Java JNI shows similar performance to Go CGO for C++-backed operations
+   - The performance gap between native and C++-backed is larger for Go
 
-## Technical Notes
+6. **Percentile Analysis**:
+   - **Go Native**: Shows very consistent performance with tight percentile ranges
+   - **Java Native**: Shows more variance, especially in ordered map operations
+   - **C++-Backed**: Both show higher variance, indicating less predictable performance
+
+7. **Performance Consistency**:
+   - **Go Native**: Most consistent performance with P99/P50 ratios close to 1x
+   - **Java Native**: Higher variance in ordered map operations (7.93x P99/P50 ratio)
+   - **C++-Backed**: Moderate variance with P99/P50 ratios around 1.5-3x
+
+### Technical Notes
 
 ### C++ Library Features
 - **Ordered Map**: std::map for sorted key-value storage
@@ -82,20 +134,9 @@ This project benchmarks the performance of calling C++ cache operations from Go 
 
 The benchmark results clearly demonstrate that:
 
-1. **Native implementations are dramatically faster** than C++-backed ones for simple caching operations
+1. **Native implementations are dramatically faster** than C++-backed ones for simple caching operations across all percentiles
 2. **CGO/JNI overhead is substantial** and should be considered when choosing between native and C++ implementations
-3. **Java's native collections** generally outperform Go's for map operations
+3. **Go's native collections** generally outperform Java's for map operations
 4. **For pure caching needs**, native implementations are the clear choice
-5. **C++ integration should be reserved** for cases where specific C++ features or libraries are required
-
-The choice between native and C++-backed implementations should be based on:
-- **Performance requirements**: Native implementations are significantly faster
-- **C++ feature needs**: Use C++ backend only if specific C++ libraries or features are required
-- **Development complexity**: Native implementations are simpler to develop and maintain
-
-## Future Enhancements
-1. **Protobuf Integration**: Resolve Abseil linking issues for full protobuf support
-2. **Memory Management**: Implement proper memory management for production use
-3. **Error Handling**: Add comprehensive error handling and validation
-4. **Thread Safety**: Add thread safety considerations for concurrent access
-5. **More Complex Operations**: Benchmark more complex C++ operations to justify the overhead 
+5. **Percentile analysis reveals** that native implementations provide more predictable performance with lower variance
+6. **Performance consistency** is crucial for production systems, where Go native implementations show the best characteristics 

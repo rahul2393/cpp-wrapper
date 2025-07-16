@@ -8,6 +8,7 @@ package main
 import "C"
 import (
 	"fmt"
+	"sort"
 	"time"
 	"unsafe"
 )
@@ -76,41 +77,40 @@ func BenchmarkCache() {
 
 	// Benchmark ordered map lookups
 	fmt.Println("Benchmarking ordered map lookups...")
-	var totalOrderedTime int64
+	orderedTimes := make([]int64, 100000)
 	iterations := 100000
 	for i := 0; i < iterations; i++ {
 		key := fmt.Sprintf("key_%d", i%10000)
 		start := time.Now()
 		result := cache.LookupOrdered(key)
-		totalOrderedTime += time.Since(start).Nanoseconds()
+		orderedTimes[i] = time.Since(start).Nanoseconds()
 		_ = result
 	}
-	avgOrderedTime := float64(totalOrderedTime) / float64(iterations)
 
 	// Benchmark hash map lookups
 	fmt.Println("Benchmarking hash map lookups...")
-	var totalHashTime int64
+	hashTimes := make([]int64, 100000)
 	for i := 0; i < iterations; i++ {
 		key := fmt.Sprintf("key_%d", i%10000)
 		start := time.Now()
 		result := cache.LookupHash(key)
-		totalHashTime += time.Since(start).Nanoseconds()
+		hashTimes[i] = time.Since(start).Nanoseconds()
 		_ = result
 	}
-	avgHashTime := float64(totalHashTime) / float64(iterations)
 
 	// Benchmark proto operations
 	fmt.Println("Benchmarking proto operations...")
-	start := time.Now()
+	protoTimes := make([]int64, 10000)
 	for i := 0; i < 10000; i++ {
+		start := time.Now()
 		cache.GetProto("test_proto")
+		protoTimes[i] = time.Since(start).Nanoseconds()
 	}
-	protoTime := time.Since(start).Nanoseconds() / 10000
 
 	fmt.Printf("\nResults:\n")
-	fmt.Printf("Average ordered map lookup time: %.2f ns\n", avgOrderedTime)
-	fmt.Printf("Average hash map lookup time: %.2f ns\n", avgHashTime)
-	fmt.Printf("Average proto get time: %d ns\n", protoTime)
+	printTimingStats("Ordered map lookup", orderedTimes)
+	printTimingStats("Hash map lookup", hashTimes)
+	printTimingStats("Proto get", protoTimes)
 }
 
 // Go-native cache benchmarks
@@ -139,37 +139,82 @@ func BenchmarkGoNativeCache() {
 
 	// Benchmark ordered map lookups
 	fmt.Println("Benchmarking ordered map lookups...")
-	totalOrderedTime := int64(0)
+	orderedTimes := make([]int64, 100000)
 	iterations := 100000
 	for i := 0; i < iterations; i++ {
 		key := fmt.Sprintf("key_%d", i%10000)
 		start := time.Now()
 		_ = orderedMap[key]
-		totalOrderedTime += time.Since(start).Nanoseconds()
+		orderedTimes[i] = time.Since(start).Nanoseconds()
 	}
-	avgOrderedTime := float64(totalOrderedTime) / float64(iterations)
 
 	// Benchmark hash map lookups
 	fmt.Println("Benchmarking hash map lookups...")
-	totalHashTime := int64(0)
+	hashTimes := make([]int64, 100000)
 	for i := 0; i < iterations; i++ {
 		key := fmt.Sprintf("key_%d", i%10000)
 		start := time.Now()
 		_ = hashMap[key]
-		totalHashTime += time.Since(start).Nanoseconds()
+		hashTimes[i] = time.Since(start).Nanoseconds()
 	}
-	avgHashTime := float64(totalHashTime) / float64(iterations)
 
 	// Benchmark proto operations
 	fmt.Println("Benchmarking proto operations...")
-	start := time.Now()
+	protoTimes := make([]int64, 10000)
 	for i := 0; i < 10000; i++ {
+		start := time.Now()
 		_ = dataMap["test_proto"]
+		protoTimes[i] = time.Since(start).Nanoseconds()
 	}
-	protoTime := time.Since(start).Nanoseconds() / 10000
 
 	fmt.Printf("\nResults (Go Native):\n")
-	fmt.Printf("Average ordered map lookup time: %.2f ns\n", avgOrderedTime)
-	fmt.Printf("Average hash map lookup time: %.2f ns\n", avgHashTime)
-	fmt.Printf("Average proto get time: %d ns\n", protoTime)
+	printTimingStats("Ordered map lookup", orderedTimes)
+	printTimingStats("Hash map lookup", hashTimes)
+	printTimingStats("Proto get", protoTimes)
+}
+
+// calculatePercentile calculates the nth percentile from a sorted slice of durations
+func calculatePercentile(times []int64, percentile int) int64 {
+	if len(times) == 0 {
+		return 0
+	}
+	index := (percentile * len(times)) / 100
+	if index >= len(times) {
+		index = len(times) - 1
+	}
+	return times[index]
+}
+
+// printTimingStats prints average and percentile statistics
+func printTimingStats(operation string, times []int64) {
+	if len(times) == 0 {
+		return
+	}
+
+	// Sort times for percentile calculation
+	sortedTimes := make([]int64, len(times))
+	copy(sortedTimes, times)
+	sort.Slice(sortedTimes, func(i, j int) bool {
+		return sortedTimes[i] < sortedTimes[j]
+	})
+
+	// Calculate average
+	var total int64
+	for _, t := range times {
+		total += t
+	}
+	avg := float64(total) / float64(len(times))
+
+	// Calculate percentiles
+	p50 := calculatePercentile(sortedTimes, 50)
+	p90 := calculatePercentile(sortedTimes, 90)
+	p95 := calculatePercentile(sortedTimes, 95)
+	p99 := calculatePercentile(sortedTimes, 99)
+
+	fmt.Printf("%s:\n", operation)
+	fmt.Printf("  Average: %.2f ns\n", avg)
+	fmt.Printf("  P50: %d ns\n", p50)
+	fmt.Printf("  P90: %d ns\n", p90)
+	fmt.Printf("  P95: %d ns\n", p95)
+	fmt.Printf("  P99: %d ns\n", p99)
 }
