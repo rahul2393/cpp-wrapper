@@ -19,11 +19,28 @@ target_include_directories(cache_jni PUBLIC
     ${JNI_INCLUDE_DIRS}
 )
 
-# Link libraries
-target_link_libraries(cache_jni
-    ${JNI_LIBRARIES}
-    ${CMAKE_CURRENT_SOURCE_DIR}/../cpp/build/lib/libcache_lib.dylib
-)
+# Determine library extension based on platform
+if(APPLE)
+    set(CACHE_LIB_EXT "dylib")
+else()
+    set(CACHE_LIB_EXT "so")
+endif()
+
+# Link libraries with static C++ standard library to avoid GLIBC issues
+if(APPLE)
+    target_link_libraries(cache_jni
+        ${JNI_LIBRARIES}
+        ${CMAKE_CURRENT_SOURCE_DIR}/../cpp/build/lib/libcache_lib.${CACHE_LIB_EXT}
+    )
+else()
+    # On Linux, use static linking for C++ standard library
+    target_link_libraries(cache_jni
+        ${JNI_LIBRARIES}
+        ${CMAKE_CURRENT_SOURCE_DIR}/../cpp/build/lib/libcache_lib.${CACHE_LIB_EXT}
+        -static-libstdc++
+        -static-libgcc
+    )
+endif()
 
 # Set output directory
 set_target_properties(cache_jni PROPERTIES

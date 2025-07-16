@@ -28,13 +28,17 @@ public class Main {
             cache.setProto("test_proto", protoData);
 
             // Benchmark ordered map lookups
-            System.out.println("\nBenchmarking ordered map lookups...");
+            System.out.println("Benchmarking ordered map lookups...");
             long totalOrderedTime = 0;
             int iterations = 100000;
             for (int i = 0; i < iterations; i++) {
                 String key = "key_" + (i % 10000);
-                cache.lookupOrdered(key);
-                totalOrderedTime += cache.getOrderedLookupTimeNs();
+                long start = System.nanoTime();
+                String result = cache.lookupOrdered(key);
+                totalOrderedTime += (System.nanoTime() - start);
+                if (result == null) {
+                    System.out.println("Unexpected null result");
+                }
             }
             double avgOrderedTime = (double) totalOrderedTime / iterations;
 
@@ -43,8 +47,12 @@ public class Main {
             long totalHashTime = 0;
             for (int i = 0; i < iterations; i++) {
                 String key = "key_" + (i % 10000);
-                cache.lookupHash(key);
-                totalHashTime += cache.getHashLookupTimeNs();
+                long start = System.nanoTime();
+                String result = cache.lookupHash(key);
+                totalHashTime += (System.nanoTime() - start);
+                if (result == null) {
+                    System.out.println("Unexpected null result");
+                }
             }
             double avgHashTime = (double) totalHashTime / iterations;
 
@@ -82,6 +90,7 @@ public class Main {
             orderedMap.put(key, value);
             hashMap.put(key, value);
         }
+
         // 1KB data
         byte[] protoData = new byte[1024];
         for (int i = 0; i < protoData.length; i++) {
@@ -90,7 +99,7 @@ public class Main {
         dataMap.put("test_proto", protoData);
 
         // Benchmark ordered map lookups
-        System.out.println("\nBenchmarking ordered map lookups...");
+        System.out.println("Benchmarking ordered map lookups...");
         long totalOrderedTime = 0;
         int iterations = 100000;
         for (int i = 0; i < iterations; i++) {
@@ -118,7 +127,8 @@ public class Main {
         for (int i = 0; i < 10000; i++) {
             dataMap.get("test_proto");
         }
-        long protoTime = (System.nanoTime() - start) / 10000;
+        long end = System.nanoTime();
+        long protoTime = (end - start) / 10000;
 
         System.out.printf("\nResults (Java Native):\n");
         System.out.printf("Average ordered map lookup time: %.2f ns\n", avgOrderedTime);
