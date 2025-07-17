@@ -114,11 +114,16 @@ This project benchmarks the performance of calling C++ cache operations from Go 
 
 ## Performance Plots
 
-The benchmark generates comprehensive performance visualizations:
+The benchmark generates comprehensive performance visualizations showing latency percentiles across different concurrency levels:
 
-1. **Go Comparison Plot** (`results/go_comparison.png`): Shows Go native vs C++ wrapper performance across concurrency levels
-2. **Java Comparison Plot** (`results/java_comparison.png`): Shows Java native vs C++ wrapper performance across concurrency levels  
-3. **Combined Comparison Plot** (`results/combined_comparison.png`): Cross-language performance comparison
+### Go Native vs C++ Wrapper Performance
+![Go Performance Comparison](results/go_comparison.png)
+
+### Java Native vs C++ Wrapper Performance  
+![Java Performance Comparison](results/java_comparison.png)
+
+### Cross-Language Performance Comparison
+![Combined Performance Comparison](results/combined_comparison.png)
 
 All benchmark data is available in `results/benchmark_results.csv` for further analysis.
 

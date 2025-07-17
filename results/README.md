@@ -2,12 +2,20 @@
 
 This directory contains the performance benchmark results for the C++ cache wrapper comparison.
 
-## Files
+## Performance Visualizations
+
+### Go Native vs C++ Wrapper Performance
+![Go Performance Comparison](go_comparison.png)
+
+### Java Native vs C++ Wrapper Performance
+![Java Performance Comparison](java_comparison.png)
+
+### Cross-Language Performance Comparison
+![Combined Performance Comparison](combined_comparison.png)
+
+## Data Files
 
 - **`benchmark_results.csv`**: Raw benchmark data with latency percentiles (P50, P90, P95) across different concurrency levels
-- **`go_comparison.png`**: Performance comparison between Go native and C++ wrapper implementations
-- **`java_comparison.png`**: Performance comparison between Java native and C++ wrapper implementations  
-- **`combined_comparison.png`**: Cross-language performance comparison across all implementations
 
 ## Key Findings
 
