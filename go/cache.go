@@ -7,8 +7,12 @@ package main
 */
 import "C"
 import (
+	"encoding/csv"
 	"fmt"
+	"os"
 	"sort"
+	"strconv"
+	"sync"
 	"time"
 	"unsafe"
 )
@@ -171,6 +175,180 @@ func BenchmarkGoNativeCache() {
 	printTimingStats("Ordered map lookup", orderedTimes)
 	printTimingStats("Hash map lookup", hashTimes)
 	printTimingStats("Proto get", protoTimes)
+}
+
+// ConcurrentBenchmarkResult holds the results of concurrent benchmarking
+type ConcurrentBenchmarkResult struct {
+	Operation   string
+	Concurrency int
+	P50         int64
+	P90         int64
+	P95         int64
+	Times       []int64
+}
+
+// runConcurrentBenchmark runs a concurrent benchmark with the given parameters
+func runConcurrentBenchmark(operation string, concurrency int, totalOps int, benchFunc func(int) []int64) ConcurrentBenchmarkResult {
+	opsPerGoroutine := totalOps / concurrency
+	results := make([][]int64, concurrency)
+	var wg sync.WaitGroup
+
+	for i := 0; i < concurrency; i++ {
+		wg.Add(1)
+		go func(goroutineID int) {
+			defer wg.Done()
+			results[goroutineID] = benchFunc(opsPerGoroutine)
+		}(i)
+	}
+
+	wg.Wait()
+
+	// Combine all results
+	var allTimes []int64
+	for _, result := range results {
+		allTimes = append(allTimes, result...)
+	}
+
+	// Sort for percentile calculation
+	sort.Slice(allTimes, func(i, j int) bool {
+		return allTimes[i] < allTimes[j]
+	})
+
+	return ConcurrentBenchmarkResult{
+		Operation:   operation,
+		Concurrency: concurrency,
+		P50:         calculatePercentile(allTimes, 50),
+		P90:         calculatePercentile(allTimes, 90),
+		P95:         calculatePercentile(allTimes, 95),
+		Times:       allTimes,
+	}
+}
+
+// writeCSVResults writes benchmark results to CSV file
+func writeCSVResults(filename string, results []ConcurrentBenchmarkResult, language string, implementation string) error {
+	file, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	// Write header if file is empty
+	if info, err := file.Stat(); err == nil && info.Size() == 0 {
+		header := []string{"language", "implementation", "concurrency", "p50", "p90", "p95"}
+		writer.Write(header)
+	}
+
+	// Write results
+	for _, result := range results {
+		record := []string{
+			language,
+			implementation,
+			strconv.Itoa(result.Concurrency),
+			strconv.FormatInt(result.P50, 10),
+			strconv.FormatInt(result.P90, 10),
+			strconv.FormatInt(result.P95, 10),
+		}
+		writer.Write(record)
+	}
+
+	return nil
+}
+
+// BenchmarkConcurrentCache runs concurrent benchmarks on C++ cache
+func BenchmarkConcurrentCache() {
+	fmt.Println("Concurrent C++ Cache Benchmark")
+	fmt.Println("==============================")
+
+	concurrencyLevels := []int{2, 4, 6, 8, 10, 12, 14, 16, 20, 32, 64}
+	totalOps := 100000
+	var results []ConcurrentBenchmarkResult
+
+	for _, concurrency := range concurrencyLevels {
+		fmt.Printf("Testing with %d threads...\n", concurrency)
+
+		// Create shared cache
+		cache := NewCache()
+
+		// Populate maps
+		for i := 0; i < 10000; i++ {
+			key := fmt.Sprintf("key_%d", i)
+			value := fmt.Sprintf("value_%d", i)
+			cache.PopulateOrderedMap(key, value)
+			cache.PopulateHashMap(key, value)
+		}
+
+		// Benchmark hash map lookups (most common operation)
+		result := runConcurrentBenchmark("Hash Map Lookup", concurrency, totalOps, func(ops int) []int64 {
+			times := make([]int64, ops)
+			for i := 0; i < ops; i++ {
+				key := fmt.Sprintf("key_%d", i%10000)
+				start := time.Now()
+				cache.LookupHash(key)
+				times[i] = time.Since(start).Nanoseconds()
+			}
+			return times
+		})
+
+		fmt.Printf("  Concurrency %d - P50: %d ns, P90: %d ns, P95: %d ns\n",
+			concurrency, result.P50, result.P90, result.P95)
+
+		results = append(results, result)
+		cache.Destroy()
+	}
+
+	// Write results to CSV
+	if err := writeCSVResults("benchmark_results.csv", results, "Go", "cpp_wrapper"); err != nil {
+		fmt.Printf("Error writing CSV: %v\n", err)
+	}
+}
+
+// BenchmarkConcurrentGoNativeCache runs concurrent benchmarks on native Go cache
+func BenchmarkConcurrentGoNativeCache() {
+	fmt.Println("Concurrent Go Native Cache Benchmark")
+	fmt.Println("====================================")
+
+	concurrencyLevels := []int{2, 4, 6, 8, 10, 12, 14, 16, 20, 32, 64}
+	totalOps := 100000
+	var results []ConcurrentBenchmarkResult
+
+	for _, concurrency := range concurrencyLevels {
+		fmt.Printf("Testing with %d threads...\n", concurrency)
+
+		// Create shared cache with sync.Map (thread-safe)
+		var hashMap sync.Map
+
+		// Populate maps
+		for i := 0; i < 10000; i++ {
+			key := fmt.Sprintf("key_%d", i)
+			value := fmt.Sprintf("value_%d", i)
+			hashMap.Store(key, value)
+		}
+
+		// Benchmark hash map lookups
+		result := runConcurrentBenchmark("Hash Map Lookup", concurrency, totalOps, func(ops int) []int64 {
+			times := make([]int64, ops)
+			for i := 0; i < ops; i++ {
+				key := fmt.Sprintf("key_%d", i%10000)
+				start := time.Now()
+				_, _ = hashMap.Load(key)
+				times[i] = time.Since(start).Nanoseconds()
+			}
+			return times
+		})
+
+		fmt.Printf("  Concurrency %d - P50: %d ns, P90: %d ns, P95: %d ns\n",
+			concurrency, result.P50, result.P90, result.P95)
+
+		results = append(results, result)
+	}
+
+	// Write results to CSV
+	if err := writeCSVResults("benchmark_results.csv", results, "Go", "native"); err != nil {
+		fmt.Printf("Error writing CSV: %v\n", err)
+	}
 }
 
 // calculatePercentile calculates the nth percentile from a sorted slice of durations

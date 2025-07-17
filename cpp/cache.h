@@ -26,8 +26,6 @@ const char* cache_get_proto(CacheHandle handle, const char* key, int* proto_size
 const char* cache_lookup_ordered(CacheHandle handle, const char* key);
 const char* cache_lookup_hash(CacheHandle handle, const char* key);
 
-// Benchmark helpers
-long long cache_get_ordered_lookup_time_ns(CacheHandle handle);
-long long cache_get_hash_lookup_time_ns(CacheHandle handle);
+
 
 } 

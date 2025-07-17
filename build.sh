@@ -16,6 +16,9 @@ else
     exit 1
 fi
 
+# Clear previous benchmark results
+rm -f benchmark_results.csv
+
 echo "Building C++ Cache Library..."
 cd cpp
 mkdir -p build
@@ -63,4 +66,20 @@ fi
 java -Djava.library.path=build/lib -cp target/classes Main
 cd ..
 
+echo "Generating Performance Plots..."
+if command -v python3 &> /dev/null; then
+    python3 -c "import matplotlib.pyplot as plt" &> /dev/null || {
+        echo "Installing matplotlib..."
+        pip3 install matplotlib
+    }
+    python3 plot_results.py
+else
+    echo "Python3 not found. Skipping plot generation."
+    echo "To generate plots, install Python3 and matplotlib, then run: python3 plot_results.py"
+fi
+
 echo "Benchmark completed!" 
+echo "Results saved to benchmark_results.csv"
+if [ -d "plots" ]; then
+    echo "Performance plots saved to plots/ directory"
+fi 

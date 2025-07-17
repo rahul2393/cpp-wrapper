@@ -74,12 +74,6 @@ JNIEXPORT jstring JNICALL Java_Cache_cacheLookupHash(JNIEnv* env, jobject obj, j
     return jresult;
 }
 
-JNIEXPORT jlong JNICALL Java_Cache_cacheGetOrderedLookupTimeNs(JNIEnv* env, jobject obj, jlong handle) {
-    return cache_get_ordered_lookup_time_ns((CacheHandle)handle);
-}
 
-JNIEXPORT jlong JNICALL Java_Cache_cacheGetHashLookupTimeNs(JNIEnv* env, jobject obj, jlong handle) {
-    return cache_get_hash_lookup_time_ns((CacheHandle)handle);
-}
 
 } 

@@ -1,148 +1,72 @@
-# C++ Cache Performance Benchmark
+# C++ Cache Library Wrapper
 
-This project benchmarks the performance of calling C++ cache operations from Go (via CGO) and Java (via JNI).
-
-## Project Structure
-
-```
-.
-├── proto/           # Protobuf definitions
-├── cpp/            # C++ shared library with cache implementation
-├── go/             # Go wrapper using CGO
-├── java/           # Java wrapper using JNI
-└── build.sh        # Build and run script
-```
+A high-performance cache library with C++ core implementation and Go/Java bindings for cross-language performance comparison.
 
 ## Features
 
-The C++ cache library provides:
-- **Ordered Map**: std::map for sorted key-value storage
-- **Hash Map**: std::unordered_map for O(1) lookups
-- **Proto Support**: 1KB protobuf message handling
-- **Performance Timing**: Nanosecond-precision lookup timing
+- **C++ Core**: High-performance cache implementation with thread safety
+- **Go Integration**: CGO bindings for Go applications
+- **Java Integration**: JNI bindings for Java applications
+- **Concurrent Benchmarking**: Multi-threaded performance testing
+- **Performance Visualization**: Automated plotting of benchmark results
 
-## Prerequisites
+## Benchmark Types
 
-- **C++**: CMake 3.16+, C++17 compiler, Protobuf
-- **Go**: Go 1.21+
-- **Java**: Java 11+, Maven, JNI headers
-- **Protobuf**: protobuf-compiler
+### Serial Benchmarks
+- 100,000 operations per test
+- Single-threaded execution
+- P50, P90, P95, P99 latency measurements
 
-### macOS Installation
-```bash
-brew install cmake protobuf go maven
-```
-
-### Ubuntu/Debian Installation
-```bash
-sudo apt-get install cmake libprotobuf-dev protobuf-compiler golang-go maven openjdk-11-jdk
-```
+### Concurrent Benchmarks
+- 100,000 total operations distributed across threads
+- Concurrency levels: 2, 4, 6, 8, 10, 12, 14, 16, 20, 32, 64 threads
+- Mutex-protected operations for thread safety
+- Native vs C++ wrapper performance comparison
 
 ## Quick Start
 
-1. **Build and Run All Benchmarks**:
 ```bash
-chmod +x build.sh
+# Run all benchmarks and generate plots
 ./build.sh
+
+# Manual plotting (requires Python3 and matplotlib)
+python3 plot_results.py
 ```
 
-2. **Manual Build Steps**:
+## Requirements
 
-### Build C++ Library
-```bash
-cd cpp
-mkdir build && cd build
-cmake ..
-make
-cd ../..
-```
+- **C++17** compatible compiler
+- **Go 1.21+**
+- **Java 11+**
+- **Python 3.7+** (for plotting)
+- **matplotlib** (for plotting)
 
-### Build Go Benchmark
-```bash
-cd go
-go mod tidy
-go build -o cache_benchmark .
-cd ..
-```
+## Build Process
 
-### Build Java Benchmark
-```bash
-cd java
-mkdir build && cd build
-cmake ..
-make
-mvn clean compile
-cd ../..
-```
+1. **C++ Library**: Builds shared library with mutex synchronization
+2. **Go Benchmark**: Compiles Go benchmark with CGO bindings
+3. **Java Benchmark**: Compiles Java benchmark with JNI bindings
+4. **Benchmark Execution**: Runs both serial and concurrent tests
+5. **Plot Generation**: Creates performance comparison visualizations
 
-### Run Benchmarks
-```bash
-# Go
-cd go
-export LD_LIBRARY_PATH=../cpp/build/lib:$LD_LIBRARY_PATH
-./cache_benchmark
+## Output
 
-# Java
-cd java
-export LD_LIBRARY_PATH=build/lib:$LD_LIBRARY_PATH
-java -cp target/classes Main
-```
+- **Console**: Real-time benchmark results
+- **CSV**: `benchmark_results.csv` with detailed metrics
+- **Plots**: `plots/` directory with performance visualizations
+  - `go_comparison.png` - Go native vs C++ wrapper
+  - `java_comparison.png` - Java native vs C++ wrapper
+  - `combined_comparison.png` - Cross-language comparison
 
-## Benchmark Details
+## Performance Metrics
 
-Each benchmark performs:
-1. **Population**: 10,000 key-value pairs in both ordered and hash maps
-2. **Proto Setup**: 1KB protobuf message storage
-3. **Lookup Tests**: 100,000 iterations of map lookups
-4. **Proto Tests**: 10,000 proto retrieval operations
+- **P50**: 50th percentile latency
+- **P90**: 90th percentile latency  
+- **P95**: 95th percentile latency
 
-## Expected Results
+## Thread Safety
 
-The benchmarks will output:
-- Average ordered map lookup time (nanoseconds)
-- Average hash map lookup time (nanoseconds)  
-- Average proto retrieval time (nanoseconds)
-
-## Architecture
-
-### C++ Core (`cpp/`)
-- `cache.h`: C-style interface for language bindings
-- `cache.cpp`: Implementation with std::map, std::unordered_map
-- `CMakeLists.txt`: Build configuration
-
-### Go Wrapper (`go/`)
-- `cache.go`: CGO bindings to C++ library
-- `main.go`: Benchmark runner
-- `go.mod`: Module dependencies
-
-### Java Wrapper (`java/`)
-- `Cache.java`: JNI interface class
-- `CacheJNI.cpp`: JNI implementation
-- `Main.java`: Benchmark runner
-- `pom.xml`: Maven configuration
-
-## Performance Considerations
-
-- **CGO Overhead**: Go's CGO has minimal overhead for simple calls
-- **JNI Overhead**: Java JNI has higher overhead due to JVM boundary crossing
-- **Memory Management**: Simplified string handling for prototype
-- **Timing Precision**: Nanosecond-level measurements for accurate comparison
-
-## Troubleshooting
-
-### Library Not Found
-```bash
-export LD_LIBRARY_PATH=/path/to/library:$LD_LIBRARY_PATH
-```
-
-### Protobuf Issues
-```bash
-# Regenerate protobuf files
-protoc --cpp_out=cpp proto/cache.proto
-```
-
-### JNI Issues
-```bash
-# Ensure JAVA_HOME is set
-export JAVA_HOME=/path/to/java
-``` 
+All implementations include proper synchronization:
+- **C++ Cache**: `std::mutex` for thread-safe operations
+- **Go Native**: `sync.RWMutex` for read/write separation
+- **Java Native**: `ReentrantReadWriteLock` for concurrent access 

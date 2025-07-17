@@ -2,6 +2,7 @@
 #include <iostream>
 #include <memory>
 #include <chrono>
+#include <shared_mutex>
 
 class Cache {
 private:
@@ -9,51 +10,52 @@ private:
     std::unordered_map<std::string, std::string> hash_map;
     std::unordered_map<std::string, std::string> proto_cache;
     
-    long long ordered_lookup_time_ns = 0;
-    long long hash_lookup_time_ns = 0;
+    // Use separate locks for different data structures to reduce contention
+    mutable std::shared_mutex ordered_mutex;
+    mutable std::shared_mutex hash_mutex;
+    mutable std::shared_mutex proto_mutex;
+    
+
 
 public:
     void populate_ordered_map(const std::string& key, const std::string& value) {
+        std::unique_lock<std::shared_mutex> lock(ordered_mutex);
         ordered_map[key] = value;
     }
     
     void populate_hash_map(const std::string& key, const std::string& value) {
+        std::unique_lock<std::shared_mutex> lock(hash_mutex);
         hash_map[key] = value;
     }
     
     void set_proto(const std::string& key, const std::string& proto_data) {
+        std::unique_lock<std::shared_mutex> lock(proto_mutex);
         proto_cache[key] = proto_data;
     }
     
     std::string get_proto(const std::string& key) {
+        std::shared_lock<std::shared_mutex> lock(proto_mutex);
         auto it = proto_cache.find(key);
         return (it != proto_cache.end()) ? it->second : "";
     }
     
     std::string lookup_ordered(const std::string& key) {
-        auto start = std::chrono::high_resolution_clock::now();
+        std::shared_lock<std::shared_mutex> lock(ordered_mutex);
         auto it = ordered_map.find(key);
-        auto end = std::chrono::high_resolution_clock::now();
-        
-        ordered_lookup_time_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
         return (it != ordered_map.end()) ? it->second : "";
     }
     
     std::string lookup_hash(const std::string& key) {
-        auto start = std::chrono::high_resolution_clock::now();
+        std::shared_lock<std::shared_mutex> lock(hash_mutex);
         auto it = hash_map.find(key);
-        auto end = std::chrono::high_resolution_clock::now();
-        
-        hash_lookup_time_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
         return (it != hash_map.end()) ? it->second : "";
     }
     
-    long long get_ordered_lookup_time_ns() const { return ordered_lookup_time_ns; }
-    long long get_hash_lookup_time_ns() const { return hash_lookup_time_ns; }
+
 };
 
-// Global storage for returned strings (simplified memory management)
-static std::string last_returned_string;
+// Thread-local storage for returned strings to avoid race conditions
+thread_local std::string last_returned_string;
 
 extern "C" {
 
@@ -98,16 +100,6 @@ const char* cache_lookup_hash(CacheHandle handle, const char* key) {
     auto cache = static_cast<Cache*>(handle);
     last_returned_string = cache->lookup_hash(key);
     return last_returned_string.c_str();
-}
-
-long long cache_get_ordered_lookup_time_ns(CacheHandle handle) {
-    auto cache = static_cast<Cache*>(handle);
-    return cache->get_ordered_lookup_time_ns();
-}
-
-long long cache_get_hash_lookup_time_ns(CacheHandle handle) {
-    auto cache = static_cast<Cache*>(handle);
-    return cache->get_hash_lookup_time_ns();
 }
 
 } 

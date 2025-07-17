@@ -40,13 +40,7 @@ public class Cache {
         return cacheLookupHash(handle, key);
     }
 
-    public long getOrderedLookupTimeNs() {
-        return cacheGetOrderedLookupTimeNs(handle);
-    }
 
-    public long getHashLookupTimeNs() {
-        return cacheGetHashLookupTimeNs(handle);
-    }
 
     // Native method declarations
     private native long cacheCreate();
@@ -57,6 +51,4 @@ public class Cache {
     private native byte[] cacheGetProto(long handle, String key);
     private native String cacheLookupOrdered(long handle, String key);
     private native String cacheLookupHash(long handle, String key);
-    private native long cacheGetOrderedLookupTimeNs(long handle);
-    private native long cacheGetHashLookupTimeNs(long handle);
 } 

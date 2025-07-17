@@ -4,7 +4,7 @@ cpp/build/
 java/build/
 go/cache_benchmark
 
-# C++ build artifacts (cross-platform)
+# C++ build artifacts
 *.o
 *.so
 *.dylib
@@ -24,7 +24,6 @@ Makefile
 *.dylib
 *.test
 *.out
-go.sum
 
 # Java build artifacts
 target/
@@ -40,8 +39,6 @@ target/
 *.swp
 *.swo
 *~
-.DS_Store
-Thumbs.db
 
 # Temporary files
 *.tmp
@@ -60,62 +57,22 @@ Thumbs.db
 ehthumbs.db
 Thumbs.db
 
-# Node.js (if any)
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Python (if any)
+# Python cache
 __pycache__/
 *.py[cod]
 *$py.class
-*.so
-.Python
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
 
 # Maven
 .mvn/
 mvnw
 mvnw.cmd
 
-# Gradle (if any)
-.gradle/
-gradle-app.setting
-!gradle-wrapper.jar
-!gradle-wrapper.properties
-
-# Protobuf generated files (if re-enabled)
-*.pb.cc
-*.pb.h
-*.pb.go
-*.pb.java
-
-# Coverage reports
-coverage/
-*.cover
-*.out
-
 # Profiling data
 *.prof
 *.pprof
+java_profile.jfr
 
 # Backup files
 *.bak
 *.backup
-*.old
-
-# Local configuration files
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Package manager lock files (keep go.mod but ignore others if needed)
-# package-lock.json
-# yarn.lock 
+*.old 
