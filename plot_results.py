@@ -68,6 +68,11 @@ def plot_comparison(results, language, output_dir='plots'):
             ax.plot(cpp_wrapper['concurrency'], cpp_wrapper[metric], 
                    marker='s', linewidth=2, markersize=8, 
                    label='C++ Wrapper', color='red')
+        elif 'ctypes' in lang_results:
+            cpp_wrapper = lang_results['ctypes']
+            ax.plot(cpp_wrapper['concurrency'], cpp_wrapper[metric], 
+                   marker='s', linewidth=2, markersize=8, 
+                   label='ctypes', color='red')
         
         ax.set_xlabel('Concurrency Level')
         ax.set_ylabel('Latency (ns)')
@@ -97,7 +102,8 @@ def plot_combined_comparison(results, output_dir='plots'):
     fig.suptitle('Cross-Language Performance Comparison', fontsize=16)
     
     colors = {'Go': {'native': 'blue', 'cpp_wrapper': 'lightblue'}, 
-              'Java': {'native': 'red', 'cpp_wrapper': 'lightcoral'}}
+              'Java': {'native': 'red', 'cpp_wrapper': 'lightcoral'},
+              'Python': {'native': 'green', 'ctypes': 'lightgreen'}}
     
     for i, (metric, title) in enumerate(zip(metrics, titles)):
         ax = axes[i]
@@ -118,6 +124,11 @@ def plot_combined_comparison(results, output_dir='plots'):
                 ax.plot(cpp_wrapper['concurrency'], cpp_wrapper[metric], 
                        marker='s', linewidth=2, markersize=6, linestyle='--',
                        label=f'{lang} C++ Wrapper', color=colors[lang]['cpp_wrapper'])
+            elif 'ctypes' in lang_results:
+                cpp_wrapper = lang_results['ctypes']
+                ax.plot(cpp_wrapper['concurrency'], cpp_wrapper[metric], 
+                       marker='s', linewidth=2, markersize=6, linestyle='--',
+                       label=f'{lang} ctypes', color=colors[lang]['ctypes'])
         
         ax.set_xlabel('Concurrency Level')
         ax.set_ylabel('Latency (ns)')
@@ -139,16 +150,16 @@ def main():
         print("Expected file: benchmark_results.csv")
         return
     
-    # Create individual language plots
+    # Create individual language plots in results directory
     for language in results.keys():
-        plot_comparison(results, language)
+        plot_comparison(results, language, 'results')
         print(f"Created plot for {language}")
     
-    # Create combined plot
-    plot_combined_comparison(results)
+    # Create combined plot in results directory
+    plot_combined_comparison(results, 'results')
     print("Created combined comparison plot")
     
-    print("All plots saved to 'plots' directory")
+    print("All plots saved to 'results' directory")
 
 if __name__ == "__main__":
     main() 

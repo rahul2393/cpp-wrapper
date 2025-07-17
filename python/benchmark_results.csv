@@ -1,0 +1,11 @@
+Language,Implementation,Operation,Concurrency,P50_ns,P90_ns,P95_ns
+Python,native,ordered_lookup,1,84,125,166
+Python,native,hash_lookup,1,125,125,167
+Python,native,ordered_lookup,2,125,166,167
+Python,native,hash_lookup,2,125,125,167
+Python,native,ordered_lookup,4,84,125,167
+Python,native,hash_lookup,4,84,125,167
+Python,native,ordered_lookup,8,84,125,167
+Python,native,hash_lookup,8,84,125,167
+Python,native,ordered_lookup,16,84,125,166
+Python,native,hash_lookup,16,84,125,166

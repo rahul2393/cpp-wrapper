@@ -78,6 +78,45 @@ This project benchmarks the performance of calling C++ cache operations from Go 
 | 32 | 750 | 375 | **2.0x slower** |
 | 64 | 750 | 333 | **2.3x slower** |
 
+## Python Performance Results
+
+### Hash Map Lookup Performance (100,000 operations)
+
+| Implementation         | Average (ns) | P50 (ns) | P90 (ns) | P95 (ns) | P99 (ns) |
+|-----------------------|--------------|----------|----------|----------|----------|
+| **Python C++ Wrapper (ctypes)** | 884.75 | 833 | 1000 | 1083 | 1291 |
+| **Python Native**     | 101.81       | 84       | 125      | 166      | 209      |
+
+### Performance Ratios (Native vs C++ Wrapper)
+
+| Metric | Python Native vs ctypes |
+|--------|------------------------|
+| **P50** | **9.9x faster**        |
+| **P90** | **8.0x faster**        |
+| **P95** | **6.5x faster**        |
+
+## Concurrent Python Performance Results
+
+| Threads | C++ Wrapper P50 (ns) | Native P50 (ns) | Performance Ratio |
+|---------|----------------------|-----------------|-------------------|
+| 1       | 1666                 | 84              | **19.8x slower**  |
+| 2       | 1792                 | 84              | **21.3x slower**  |
+| 4       | 2875                 | 84              | **34.2x slower**  |
+| 8       | 11166                | 84              | **133x slower**   |
+| 16      | 15666                | 84              | **186x slower**   |
+
+## Why is Python+ctypes+C++ Not Fast?
+
+Although C++ code is fast and not subject to the Python GIL, calling C++ from Python using `ctypes` is much slower than native Python dicts for small operations. This is due to:
+
+- **ctypes FFI Overhead:** Every call incurs argument/return conversion and reference counting.
+- **Data Marshalling:** Each lookup encodes/decodes strings and allocates new Python objects.
+- **GIL and Threading:** The GIL is only released during the C++ call, but the overhead of entering/exiting C is high for tiny operations.
+- **Native dicts are highly optimized:** Python's built-in dict is implemented in C and is extremely fast for lookups.
+- **Microbenchmarking effect:** The cost of crossing the Python/C boundary dominates for small, frequent operations.
+
+For C++ to outperform native Python dicts in Python, you need to batch operations or use a more efficient FFI (like Cython or a C extension).
+
 ## Key Performance Insights
 
 ### 1. **CGO vs JNI Overhead**
@@ -114,13 +153,16 @@ This project benchmarks the performance of calling C++ cache operations from Go 
 
 ## Performance Plots
 
-The benchmark generates comprehensive performance visualizations showing latency percentiles across different concurrency levels:
+The benchmark now includes Python (ctypes and native) in all performance plots:
 
 ### Go Native vs C++ Wrapper Performance
 ![Go Performance Comparison](results/go_comparison.png)
 
 ### Java Native vs C++ Wrapper Performance  
 ![Java Performance Comparison](results/java_comparison.png)
+
+### Python Native vs C++ Wrapper Performance  
+![Python Performance Comparison](results/python_comparison.png)
 
 ### Cross-Language Performance Comparison
 ![Combined Performance Comparison](results/combined_comparison.png)

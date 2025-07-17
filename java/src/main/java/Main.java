@@ -332,7 +332,7 @@ public class Main {
         }
         
         // Write results to CSV
-        writeCSVResults("benchmark_results.csv", results, "Java", "cpp_wrapper");
+        writeCSVResults("../benchmark_results.csv", results, "Java", "cpp_wrapper");
     }
 
     // Benchmark concurrent Java native cache
@@ -376,6 +376,6 @@ public class Main {
         }
         
         // Write results to CSV
-        writeCSVResults("benchmark_results.csv", results, "Java", "native");
+        writeCSVResults("../benchmark_results.csv", results, "Java", "native");
     }
 } 

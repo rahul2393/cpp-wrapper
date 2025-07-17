@@ -46,6 +46,11 @@ cd java
 mvn clean compile
 cd ..
 
+echo "Building Python Benchmark..."
+cd python
+# Python uses ctypes, no build step needed
+cd ..
+
 echo "Running Go Benchmark..."
 cd go
 # Set library path for dynamic library loading
@@ -64,6 +69,13 @@ else
 fi
 # Run Java benchmark
 java -Djava.library.path=build/lib -cp target/classes Main
+cd ..
+
+echo "Running Python Benchmark..."
+cd python
+# Set library path for ctypes library loading
+export $LIBRARY_PATH_VAR=../cpp/build/lib:${!LIBRARY_PATH_VAR}
+python3 main.py
 cd ..
 
 echo "Generating Performance Plots..."

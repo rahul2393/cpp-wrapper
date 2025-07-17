@@ -300,7 +300,7 @@ func BenchmarkConcurrentCache() {
 	}
 
 	// Write results to CSV
-	if err := writeCSVResults("benchmark_results.csv", results, "Go", "cpp_wrapper"); err != nil {
+	if err := writeCSVResults("../benchmark_results.csv", results, "Go", "cpp_wrapper"); err != nil {
 		fmt.Printf("Error writing CSV: %v\n", err)
 	}
 }
@@ -346,7 +346,7 @@ func BenchmarkConcurrentGoNativeCache() {
 	}
 
 	// Write results to CSV
-	if err := writeCSVResults("benchmark_results.csv", results, "Go", "native"); err != nil {
+	if err := writeCSVResults("../benchmark_results.csv", results, "Go", "native"); err != nil {
 		fmt.Printf("Error writing CSV: %v\n", err)
 	}
 }
